@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --nutanix-purple: #6b21a8;
+    --nutanix-purple-dark: #4c1d95;
+    --nutanix-purple-light: #9333ea;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-gray-900 font-sans antialiased;
+  }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-nutanix-800 hover:bg-nutanix-900 active:scale-95
+           text-white font-semibold px-6 py-2.5 rounded-lg
+           transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-nutanix-500 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-white hover:bg-nutanix-50 active:scale-95
+           text-nutanix-800 font-semibold px-6 py-2.5 rounded-lg
+           border border-nutanix-200 hover:border-nutanix-400
+           transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-nutanix-500 focus:ring-offset-2;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2
+           text-gray-600 hover:text-nutanix-800 hover:bg-nutanix-50
+           active:scale-95 font-medium px-4 py-2 rounded-lg
+           transition-all duration-150;
+  }
+
+  .btn-outline-white {
+    @apply inline-flex items-center justify-center gap-2
+           bg-transparent hover:bg-white/10 active:scale-95
+           text-white font-semibold px-6 py-2.5 rounded-lg
+           border border-white/50 hover:border-white
+           transition-all duration-150;
+  }
+
+  /* ── Cards ── */
+  .card {
+    @apply bg-white rounded-2xl border border-gray-100 shadow-sm p-6;
+  }
+
+  .card-hover {
+    @apply card
+           hover:-translate-y-1 hover:shadow-xl hover:border-nutanix-200
+           transition-all duration-200 cursor-pointer;
+  }
+
+  /* ── Form ── */
+  .input-field {
+    @apply w-full px-4 py-2.5 rounded-lg
+           border border-gray-200 hover:border-gray-300
+           focus:outline-none focus:ring-2 focus:ring-nutanix-500 focus:border-transparent
+           text-gray-900 placeholder-gray-400
+           transition-all duration-150 bg-white;
+  }
+
+  /* ── Badges ── */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium tracking-wide;
+  }
+
+  .badge-purple {
+    @apply badge bg-nutanix-100 text-nutanix-700;
+  }
+
+  .badge-outline {
+    @apply badge border border-nutanix-200 text-nutanix-700;
+  }
+
+  /* ── Typography ── */
+  .section-heading {
+    @apply text-3xl md:text-4xl font-bold text-gray-900 tracking-tight;
+  }
+
+  .section-subheading {
+    @apply text-lg text-gray-500 mt-3 leading-relaxed;
+  }
+
+  /* ── Nav link with underline sweep ── */
+  .nav-link {
+    @apply relative text-sm font-medium text-gray-600 hover:text-nutanix-800
+           py-1 transition-colors duration-150;
+  }
+
+  .nav-link::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-nutanix-700
+           transition-all duration-200;
+  }
+
+  .nav-link:hover::after {
+    @apply w-full;
+  }
+
+  /* ── Gradient text ── */
+  .text-gradient {
+    @apply bg-gradient-to-r from-nutanix-700 to-nutanix-500
+           bg-clip-text text-transparent;
+  }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar        { width: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: #c084fc; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #9333ea; }
