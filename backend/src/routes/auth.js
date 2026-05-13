@@ -12,8 +12,8 @@ const signToken = (id) =>
 router.post(
   '/login',
   [
-    body('email').isEmail().normalizeEmail(),
-    body('password').isLength({ min: 6 }),
+    body('username').trim().notEmpty().withMessage('Username is required'),
+    body('password').notEmpty().withMessage('Password is required'),
   ],
   async (req, res, next) => {
     const errors = validationResult(req)
@@ -22,10 +22,20 @@ router.post(
     }
 
     try {
-      const { email, password } = req.body
-      const user = await User.findOne({ email, active: true })
+      const { username, password } = req.body
+
+      // Fetch with +encryptedDisplayPassword so we can check and backfill if missing
+      const user = await User.findOne({ username, active: true }).select('+encryptedDisplayPassword')
       if (!user || !(await user.comparePassword(password))) {
-        return res.status(401).json({ message: 'Invalid email or password' })
+        return res.status(401).json({ message: 'Invalid username or password' })
+      }
+
+      // Backfill encryptedDisplayPassword for any user who pre-dates this feature.
+      // We have the plain-text password here, so the pre-save hook will AES-encrypt
+      // and re-bcrypt it automatically — the user's password stays the same.
+      if (!user.encryptedDisplayPassword) {
+        user.passwordHash = password
+        await user.save()
       }
 
       res.json({ token: signToken(user._id), user: user.toSafeObject() })
@@ -39,8 +49,7 @@ router.post(
 router.post(
   '/register',
   [
-    body('username').trim().isLength({ min: 2, max: 50 }),
-    body('email').isEmail().normalizeEmail(),
+    body('username').trim().isLength({ min: 2, max: 50 }).withMessage('Username must be 2–50 characters'),
     body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   ],
   async (req, res, next) => {
@@ -50,8 +59,8 @@ router.post(
     }
 
     try {
-      const { username, email, password } = req.body
-      const user = await User.create({ username, email, passwordHash: password })
+      const { username, password } = req.body
+      const user = await User.create({ username, passwordHash: password })
       res.status(201).json({ token: signToken(user._id), user: user.toSafeObject() })
     } catch (err) {
       next(err)

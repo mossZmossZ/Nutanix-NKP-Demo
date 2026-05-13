@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Eye, EyeOff, LogIn, CheckCircle, Server } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
@@ -15,8 +15,15 @@ export default function DemoLogin() {
   const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, user, loading: authLoading, hasPortalAccess } = useAuth()
   const navigate = useNavigate()
+
+  // Already authenticated — skip the form
+  useEffect(() => {
+    if (!authLoading && user && hasPortalAccess('demo')) {
+      navigate('/demo/dashboard', { replace: true })
+    }
+  }, [authLoading, user])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

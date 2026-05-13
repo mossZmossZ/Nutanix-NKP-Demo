@@ -25,13 +25,22 @@ nutanix-nkp-demo/
 
 ## Environment Variables
 
-**backend/.env**
+**backend/.env** (copy from `.env.example`)
 ```
 NODE_ENV=development
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/nutanix-nkp-demo
+MONGODB_URI=mongodb://root:password@localhost:27017/nutanix-nkp-demo?authSource=admin
 JWT_SECRET=your-secret-key
+JWT_EXPIRES_IN=7d
 CORS_ORIGIN=http://localhost:5173
+
+# Admin auto-seed (creates on first startup)
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=Admin@1234
+
+# AES-256 encryption key for cluster passwords (64 hex chars)
+# Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+ENCRYPTION_KEY=<64-hex-chars>
 ```
 
 **frontend/.env.local**
@@ -109,14 +118,69 @@ FRONTEND_URL=https://your-domain.com
 BACKEND_API_URL=https://your-domain.com/api
 ```
 
+## Admin Panel
+
+Accessible at `/admin` — separate from main site (no shared navbar).
+
+| Route | Description |
+|-------|-------------|
+| `/admin` | Admin login page |
+| `/admin/dashboard` | Overview stats |
+| `/admin/dashboard/users` | User CRUD + portal access |
+| `/admin/dashboard/credentials` | Cluster credential management |
+
+## API Routes
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/auth/login` | — | Login (returns JWT) |
+| POST | `/api/auth/register` | — | Register user |
+| GET | `/api/admin/stats` | admin | Dashboard stats |
+| GET/POST | `/api/admin/users` | admin | List / create users |
+| PUT/DELETE | `/api/admin/users/:id` | admin | Update / delete user |
+| GET/POST | `/api/admin/credentials` | admin | List / create credentials |
+| PUT/DELETE | `/api/admin/credentials/:id` | admin | Update / delete credential |
+| GET | `/api/admin/credentials/:id/kubeconfig` | admin/demo | Download kubeconfig |
+
 ## MongoDB Schemas
 
 ```
-Users:   _id, username, email, passwordHash, role, portalAccess[], createdAt
-Content: _id, title, slug, type, portal, content (markdown), order, createdAt
-Creds:   _id, clusterName, endpoint, username, encryptedPassword, createdAt
-YAML:    _id, name, description, content, createdAt
+Users:       _id, username, email, passwordHash, role, portalAccess[], active, createdAt
+Content:     _id, title, slug, type, portal, content (markdown), order, published, createdAt
+Credentials: _id, clusterName, dashboardUrl, username, encryptedPassword,
+             kubeconfigYaml, description, active, createdAt
 ```
+
+## PDF Viewer — Installation Guide
+
+The Installation Guide page (`/installation`) renders `NKP-Setup-Guide.pdf` in-browser using `react-pdf`.
+
+**Static assets (must exist for the viewer to work):**
+```
+frontend/public/
+├── NKP-Setup-Guide.pdf        # source: assets/NKP-Setup-Guide.pdf
+└── pdf.worker.min.mjs         # source: node_modules/pdfjs-dist/build/pdf.worker.min.mjs
+```
+
+**Adding/replacing the PDF:**
+1. Drop the new PDF into `frontend/public/` with the same filename.
+2. The viewer auto-adjusts; no code changes needed.
+
+**After upgrading `react-pdf`:** re-copy the worker to stay in sync:
+```bash
+cp frontend/node_modules/pdfjs-dist/build/pdf.worker.min.mjs frontend/public/
+```
+
+**How it works (dev):** The Vite plugin in `vite.config.js` intercepts PDF requests and serves them directly with `Content-Disposition: inline` + Range support, so the browser displays the PDF instead of downloading it. This runs before Vite's internal static middleware.
+
+**Production (Nginx):** When deploying behind Nginx (Phase 3), add this to the server block so PDFs are served inline:
+```nginx
+location ~* \.pdf$ {
+    add_header Content-Disposition inline;
+}
+```
+
+**Features:** zoom (50%–200%), page-by-page navigation, Download PDF button, Open in Tab button, error state with download fallback.
 
 ## Troubleshooting
 

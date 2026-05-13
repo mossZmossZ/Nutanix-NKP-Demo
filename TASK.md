@@ -6,6 +6,16 @@ Phase-by-phase tasks for the Nutanix NKP Demo E-Learning Platform.
 
 ## Phase 1: Local Development
 
+### In-App PDF Viewer — Installation Guide
+- [x] `react-pdf` v10 installed (pdfjs-dist v5)
+- [x] `NKP-Setup-Guide.pdf` placed in `frontend/public/` for Vite static serving
+- [x] `pdf.worker.min.mjs` copied to `frontend/public/` (avoids Vite bundler issues with the worker)
+- [x] `InstallationGuide.jsx` rewritten — Nutanix-themed PDF viewer replaces markdown content
+  - Toolbar: zoom −/+ with percentage, page ◀/▶ navigation, page count
+  - Header actions: Download PDF button, Open in Tab button
+  - Responsive: uses ResizeObserver to fit PDF to container width
+  - States: loading spinner, per-page placeholder skeleton, error state with download fallback
+
 ### Setup
 - [ ] Frontend: React+Vite, Tailwind CSS, shadcn/ui, folder structure
 - [ ] Backend: Express server, env config, folder structure
@@ -98,6 +108,33 @@ Phase-by-phase tasks for the Nutanix NKP Demo E-Learning Platform.
 - Deployment and rollback procedures documented
 
 ---
+
+---
+
+## Admin Panel (Phase 1 addition)
+
+### Backend
+- [x] `Credential` model (clusterName, dashboardUrl, username, encryptedPassword, kubeconfigYaml)
+- [x] AES-256 crypto helper (`backend/src/lib/crypto.js`)
+- [x] Admin auto-seed from `.env` on startup
+- [x] `GET/POST/PUT/DELETE /api/admin/users` — user CRUD
+- [x] `GET/POST/PUT/DELETE /api/admin/credentials` — credential CRUD
+- [x] `GET /api/admin/credentials/:id/kubeconfig` — kubeconfig download
+- [x] `GET /api/admin/stats` — dashboard stats
+
+### Frontend
+- [x] SweetAlert2 wrapper (`src/lib/swal.js`) — toasts + confirm dialogs
+- [x] `AdminRoute` guard (redirects non-admin to `/admin`)
+- [x] `/admin` — dedicated admin login page
+- [x] `/admin/dashboard` — sidebar layout (nutanix-950 sidebar)
+  - [x] Overview page — stats cards + quick actions
+  - [x] Users page — table, search, create/edit modal, delete confirm
+  - [x] Credentials page — cards, reveal password, kubeconfig download, CRUD modals
+- [x] Navbar: "Sign In" → "Admin" button → `/admin`
+
+### Remaining
+- [ ] Demo Portal dashboard: load credentials from `/api/admin/credentials` (demo users)
+- [ ] Wire kubeconfig download button in Demo Portal dashboard
 
 ## Cross-Phase Requirements
 
