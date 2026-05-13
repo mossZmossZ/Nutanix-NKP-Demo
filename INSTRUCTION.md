@@ -153,34 +153,35 @@ Credentials: _id, clusterName, dashboardUrl, username, encryptedPassword,
 
 ## PDF Viewer — Installation Guide
 
-The Installation Guide page (`/installation`) renders `NKP-Setup-Guide.pdf` in-browser using `react-pdf`.
+The Installation Guide page (`/installation`) renders the NKP Setup Guide PDF in-browser using `@embedpdf/react-pdf-viewer`. The PDF is loaded from an S3-compatible endpoint.
 
-**Static assets (must exist for the viewer to work):**
+**Environment variable (required):**
 ```
-frontend/public/
-├── NKP-Setup-Guide.pdf        # source: assets/NKP-Setup-Guide.pdf
-└── pdf.worker.min.mjs         # source: node_modules/pdfjs-dist/build/pdf.worker.min.mjs
+VITE_PDF_URL=https://your-s3-bucket.s3.amazonaws.com/NKP-Setup-Guide.pdf
 ```
 
 **Adding/replacing the PDF:**
-1. Drop the new PDF into `frontend/public/` with the same filename.
-2. The viewer auto-adjusts; no code changes needed.
+1. Upload the new PDF to your S3 bucket.
+2. Update `VITE_PDF_URL` if the filename/path changed.
+3. Ensure the S3 object is publicly readable (or has appropriate CORS headers).
 
-**After upgrading `react-pdf`:** re-copy the worker to stay in sync:
-```bash
-cp frontend/node_modules/pdfjs-dist/build/pdf.worker.min.mjs frontend/public/
+**S3 CORS configuration** (required for the viewer to fetch the PDF):
+```json
+[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedOrigins": ["*"],
+    "ExposeHeaders": ["Content-Length", "Content-Range", "Accept-Ranges"]
+  }
+]
 ```
 
-**How it works (dev):** The Vite plugin in `vite.config.js` intercepts PDF requests and serves them directly with `Content-Disposition: inline` + Range support, so the browser displays the PDF instead of downloading it. This runs before Vite's internal static middleware.
+**Routes:**
+- `/installation` — Embedded PDF viewer within the main layout (with Navbar/Footer)
+- `/installation/pdf` — Full-page PDF viewer in a new tab (no Navbar/Footer, like opening an image)
 
-**Production (Nginx):** When deploying behind Nginx (Phase 3), add this to the server block so PDFs are served inline:
-```nginx
-location ~* \.pdf$ {
-    add_header Content-Disposition inline;
-}
-```
-
-**Features:** zoom (50%–200%), page-by-page navigation, Download PDF button, Open in Tab button, error state with download fallback.
+**Features:** Built-in toolbar with zoom, page navigation, thumbnails, annotations, search. Download PDF button (manual click only, no auto-download). Open in Tab button opens `/installation/pdf` in a new browser tab.
 
 ## Troubleshooting
 

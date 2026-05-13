@@ -1,62 +1,70 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import fs from 'fs'
 
-const PDF_DIR_DEV = path.resolve(__dirname, 'public')
-const PDF_DIR_PROD = path.resolve(__dirname, 'dist')
+const S3_PDF_URL = 'https://nkp-demo-s3.nattavee.com/NKP-Setup-Guide.pdf'
 
-function servePdfInline(fileRoot) {
-  return (req, res, next) => {
-    const url = req.url?.split('?')[0]
-    if (!url?.endsWith('.pdf')) return next()
-
-    const filePath = path.join(fileRoot, url.replace(/^\//, ''))
-    if (!fs.existsSync(filePath)) return next()
-
-    const stat = fs.statSync(filePath)
-    const fileSize = stat.size
-    const range = req.headers.range
-
-    res.setHeader('Content-Type', 'application/pdf')
-    res.setHeader('Content-Disposition', 'inline')
-    res.setHeader('Accept-Ranges', 'bytes')
-
-    if (range) {
-      const parts = range.replace(/bytes=/, '').split('-')
-      const start = parseInt(parts[0], 10)
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1
-      const chunkSize = end - start + 1
-
-      res.statusCode = 206
-      res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`)
-      res.setHeader('Content-Length', chunkSize)
-      fs.createReadStream(filePath, { start, end }).pipe(res)
-    } else {
-      res.setHeader('Content-Length', fileSize)
-      fs.createReadStream(filePath).pipe(res)
-    }
-  }
-}
-
-const pdfInlinePlugin = {
-  name: 'pdf-inline-headers',
+const pdfProxyPlugin = {
+  name: 'pdf-s3-proxy',
   configureServer(server) {
     server.middlewares.stack.unshift({
       route: '',
-      handle: servePdfInline(PDF_DIR_DEV),
-    })
-  },
-  configurePreviewServer(server) {
-    server.middlewares.stack.unshift({
-      route: '',
-      handle: servePdfInline(PDF_DIR_PROD),
+      handle: async (req, res, next) => {
+        if (req.url?.split('?')[0] !== '/NKP-Setup-Guide.pdf') return next()
+
+        try {
+          const fetchOpts = {}
+          if (req.headers.range) {
+            fetchOpts.headers = { Range: req.headers.range }
+          }
+
+          const upstream = await fetch(S3_PDF_URL, fetchOpts)
+
+          res.statusCode = upstream.status
+          res.setHeader('Content-Type', upstream.headers.get('content-type') || 'application/pdf')
+          res.setHeader('Content-Disposition', 'inline')
+          res.setHeader('Accept-Ranges', 'bytes')
+          res.setHeader('Access-Control-Allow-Origin', '*')
+
+          const contentLength = upstream.headers.get('content-length')
+          if (contentLength) res.setHeader('Content-Length', contentLength)
+
+          const contentRange = upstream.headers.get('content-range')
+          if (contentRange) res.setHeader('Content-Range', contentRange)
+
+          const etag = upstream.headers.get('etag')
+          if (etag) res.setHeader('ETag', etag)
+
+          if (upstream.body) {
+            const reader = upstream.body.getReader()
+            const pump = async () => {
+              while (true) {
+                const { done, value } = await reader.read()
+                if (done) {
+                  res.end()
+                  return
+                }
+                if (!res.write(value)) {
+                  await new Promise(r => res.once('drain', r))
+                }
+              }
+            }
+            pump()
+          } else {
+            res.end()
+          }
+        } catch (err) {
+          console.error('[pdf-proxy] Failed to fetch PDF from S3:', err.message)
+          res.statusCode = 502
+          res.end('Failed to load PDF')
+        }
+      },
     })
   },
 }
 
 export default defineConfig({
-  plugins: [react(), pdfInlinePlugin],
+  plugins: [react(), pdfProxyPlugin],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

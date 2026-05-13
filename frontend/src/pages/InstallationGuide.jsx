@@ -9,7 +9,8 @@ import 'react-pdf/dist/Page/TextLayer.css'
 
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
 
-const PDF_PATH = '/NKP-Setup-Guide.pdf'
+const PDF_VIEWER_URL = '/NKP-Setup-Guide.pdf'
+const PDF_S3_URL = import.meta.env.VITE_PDF_URL || PDF_VIEWER_URL
 const MIN_SCALE = 0.5
 const MAX_SCALE = 2.0
 const SCALE_STEP = 0.15
@@ -72,7 +73,7 @@ export default function InstallationGuide() {
 
         <div className="flex items-center gap-2 shrink-0">
           <a
-            href={PDF_PATH}
+            href={PDF_S3_URL}
             download="NKP-Setup-Guide.pdf"
             className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg
                        border border-nutanix-200 bg-white hover:bg-nutanix-50
@@ -82,7 +83,7 @@ export default function InstallationGuide() {
             Download PDF
           </a>
           <a
-            href={PDF_PATH}
+            href={PDF_S3_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg
@@ -134,7 +135,7 @@ export default function InstallationGuide() {
                 <ChevronLeft size={15} />
               </ToolbarBtn>
               <span className="text-xs font-medium text-gray-600 tabular-nums select-none min-w-[3.5rem] text-center">
-                {page}&nbsp;/&nbsp;{numPages ?? '–'}
+                {page}&nbsp;/&nbsp;{numPages ?? '\u2013'}
               </span>
               <ToolbarBtn
                 onClick={next}
@@ -154,7 +155,7 @@ export default function InstallationGuide() {
           ) : (
             <div className="flex justify-center py-8 px-4">
               <Document
-                file={PDF_PATH}
+                file={PDF_VIEWER_URL}
                 onLoadSuccess={onLoad}
                 onLoadError={() => setError(true)}
                 loading={<Spinner />}
@@ -213,7 +214,7 @@ function ErrorState() {
       <h3 className="text-gray-900 font-semibold mb-1">Could not load the PDF</h3>
       <p className="text-sm text-gray-500 mb-5">Try downloading the file directly instead.</p>
       <a
-        href={PDF_PATH}
+        href={PDF_S3_URL}
         download="NKP-Setup-Guide.pdf"
         className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-lg
                    bg-nutanix-800 hover:bg-nutanix-900 text-white transition-all duration-150"

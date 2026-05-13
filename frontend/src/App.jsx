@@ -1,18 +1,19 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
-import Layout           from '@/components/layout/Layout'
-import ProtectedRoute   from '@/components/auth/ProtectedRoute'
-import AdminRoute       from '@/components/auth/AdminRoute'
+import Layout from '@/components/layout/Layout'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import AdminRoute from '@/components/auth/AdminRoute'
 
-import Home              from '@/pages/Home'
+import Home from '@/pages/Home'
 import InstallationGuide from '@/pages/InstallationGuide'
-import DemoLogin         from '@/pages/demo/DemoLogin'
-import DemoDashboard     from '@/pages/demo/DemoDashboard'
-import WorkshopLogin     from '@/pages/workshop/WorkshopLogin'
+import PdfFullView       from '@/pages/PdfFullView'
+import DemoLogin from '@/pages/demo/DemoLogin'
+import DemoDashboard from '@/pages/demo/DemoDashboard'
+import WorkshopLogin from '@/pages/workshop/WorkshopLogin'
 import WorkshopDashboard from '@/pages/workshop/WorkshopDashboard'
-import AdminLogin        from '@/pages/admin/AdminLogin'
-import AdminDashboard    from '@/pages/admin/AdminDashboard'
-import NotFound          from '@/pages/NotFound'
+import AdminLogin from '@/pages/admin/AdminLogin'
+import AdminDashboard from '@/pages/admin/AdminDashboard'
+import NotFound from '@/pages/NotFound'
 
 export default function App() {
   return (
@@ -35,6 +36,9 @@ export default function App() {
             />
             <Route path="*" element={<NotFound />} />
           </Route>
+
+          {/* ── Full-page PDF viewer (no Navbar/Footer) ── */}
+          <Route path="/installation/pdf" element={<PdfFullView />} />
 
           {/* ── Admin (no Navbar/Footer) ── */}
           <Route path="/admin" element={<AdminLogin />} />
