@@ -157,9 +157,9 @@ router.post('/:userId/provision', ...adminOnly, async (req, res, next) => {
       userId:            user._id,
       containerName,
       slot,
-      sshPort:           30000 + slot,
-      codeServerPort:    31000 + slot,
-      appPort:           32000 + slot,
+      sshPort:           5500 + slot,
+      codeServerPort:    5600 + slot,
+      appPort:           5700 + slot,
       encryptedPassword: encrypt(password),
       status:            'provisioning',
     })
