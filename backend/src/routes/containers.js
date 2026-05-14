@@ -56,6 +56,10 @@ router.post('/build-image', ...adminOnly, (req, res) => {
     cwd: DOCKER_DIR,
   })
 
+  proc.on('error', err => {
+    buildState.status = 'error'
+    buildState.log.push(`Failed to start docker: ${err.message}`)
+  })
   proc.stdout.on('data', d => buildState.log.push(d.toString()))
   proc.stderr.on('data', d => buildState.log.push(d.toString()))
   proc.on('close', code => { buildState.status = code === 0 ? 'built' : 'error' })

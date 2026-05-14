@@ -9,6 +9,9 @@ const seedAdmin = require('./utils/seedAdmin')
 
 const app = express()
 
+// Trust the Nginx reverse proxy (needed for rate-limit X-Forwarded-For)
+app.set('trust proxy', 1)
+
 // Connect DB then seed admin
 connectDB().then(seedAdmin)
 
