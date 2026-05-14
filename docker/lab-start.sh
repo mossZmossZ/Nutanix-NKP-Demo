@@ -8,8 +8,17 @@ usermod -aG sudo,docker user
 echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Configure SSH — enable password auth
-sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
-sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/'   /etc/ssh/sshd_config
+# Append overrides at the end (takes precedence over earlier lines and conf.d files)
+cat >> /etc/ssh/sshd_config <<'SSHCFG'
+
+# Lab overrides
+PasswordAuthentication yes
+ChallengeResponseAuthentication no
+PermitRootLogin no
+ListenAddress 0.0.0.0
+SSHCFG
+# Disable any conf.d files that might override password auth
+find /etc/ssh/sshd_config.d/ -type f -exec sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/gI' {} + 2>/dev/null || true
 ssh-keygen -A
 service ssh start
 
