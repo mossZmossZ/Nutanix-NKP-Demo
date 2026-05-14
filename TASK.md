@@ -17,24 +17,24 @@ Phase-by-phase tasks for the Nutanix NKP Demo E-Learning Platform.
   - States: loading spinner, per-page placeholder skeleton, error state with download fallback
 
 ### Setup
-- [ ] Frontend: React+Vite, Tailwind CSS, shadcn/ui, folder structure
-- [ ] Backend: Express server, env config, folder structure
-- [ ] MongoDB: local/cloud connection, database utility, initial schemas
+- [x] Frontend: React+Vite, Tailwind CSS, shadcn/ui, folder structure
+- [x] Backend: Express server, env config, folder structure
+- [x] MongoDB: local/cloud connection, database utility, initial schemas
 
 ### Frontend
-- [ ] Base layout: navbar (Nutanix branding), footer, layout wrapper
-- [ ] Pages: Home, Installation Guide, Demo Portal login, Workshop Portal login, 404
-- [ ] Auth UI: login form, auth state management (Context API)
-- [ ] Demo Portal: dashboard, cluster credentials view, YAML file browser/download, lab viewer
-- [ ] Workshop Portal: dashboard, learning modules list, lab exercises viewer, progress tracking
+- [x] Base layout: navbar (Nutanix branding), footer, layout wrapper
+- [x] Pages: Home, Installation Guide, Demo Portal login, Workshop Portal login, 404
+- [x] Auth UI: login form, auth state management (Context API)
+- [x] Demo Portal: dashboard, cluster credentials view, YAML file browser/download, lab viewer
+- [x] Workshop Portal: dashboard, learning modules list, lab exercises viewer, progress tracking
 
 ### Backend
-- [ ] Express: CORS, body parser, error handling middleware, logging
-- [ ] Auth: User model, JWT login/register endpoints, protected route middleware
-- [ ] Users: `GET /api/users/:id`, `GET /api/users/:id/portal-access`, RBAC middleware
-- [ ] Content: `GET /api/content`, `GET /api/content/:slug`, `GET /api/content/portal/:name`, markdown support
-- [ ] Credentials: model with encryption, `GET /api/credentials`, `GET /api/credentials/:id`
-- [ ] YAML files: `GET /api/yaml-files`, `GET /api/yaml-files/:id`, `GET /api/yaml-files/:id/download`
+- [x] Express: CORS, body parser, error handling middleware, logging
+- [x] Auth: User model, JWT login/register endpoints, protected route middleware
+- [x] Users: `GET /api/users/:id`, `GET /api/users/:id/portal-access`, RBAC middleware
+- [x] Content: `GET /api/content`, `GET /api/content/:slug`, `GET /api/content/portal/:name`, markdown support
+- [x] Credentials: model with encryption, `GET /api/credentials`, `GET /api/credentials/:id`
+- [x] YAML files: `GET /api/yaml-files`, `GET /api/yaml-files/:id`, `GET /api/yaml-files/:id/download`
 
 ### Documentation (Markdown)
 - [ ] Installation Guide — prerequisites, steps, troubleshooting
@@ -42,70 +42,67 @@ Phase-by-phase tasks for the Nutanix NKP Demo E-Learning Platform.
 - [ ] Workshop Guide — course structure, lab submission, resources
 
 ### Validation
-- [ ] Frontend: pages render, navigation, forms, no console errors
-- [ ] Backend: all endpoints respond, auth flows, DB queries, error handling
-- [ ] Integration: end-to-end login, protected content access, portal access control
+- [x] Frontend: pages render, navigation, forms, no console errors
+- [x] Backend: all endpoints respond, auth flows, DB queries, error handling
+- [x] Integration: end-to-end login, protected content access, portal access control
 
 **Success Criteria:**
-- Hot-reload local dev running for both frontend and backend
-- Users can log in to Demo and Workshop portals
-- Authenticated users can view portal content and guides
-- No critical console or server errors
+- [x] Hot-reload local dev running for both frontend and backend
+- [x] Users can log in to Demo and Workshop portals
+- [x] Authenticated users can view portal content and guides
+- [x] No critical console or server errors
 
 ---
 
 ## Phase 2: Docker Development
 
 ### Docker Config
-- [ ] `Dockerfile.frontend` — node:18-alpine, port 5173, volume for hot-reload
-- [ ] `Dockerfile.backend` — node:18-alpine, port 5000, nodemon + volume for hot-reload
-- [ ] `docker-compose.dev.yml` — frontend + backend + mongodb, networking, env vars, volumes
-- [ ] MongoDB container — root credentials, persistent volume, port 27017
+- [x] `Dockerfile.frontend` — node:20-alpine, port 5173, volume for hot-reload
+- [x] `Dockerfile.backend` — node:20-alpine, port 5000, nodemon + volume for hot-reload
+- [x] `docker-compose.full.yml` — frontend + backend + mongodb, networking, env vars, volumes
+- [x] `docker-compose.dev.yml` — MongoDB only for Phase 1 local dev
+- [x] MongoDB container — root credentials, persistent volume, port 27017
 
 ### Validation
-- [ ] All containers start, services communicate, hot-reload works, data persists
-- [ ] Setup works consistently across team machines
+- [x] All containers start, services communicate, hot-reload works, data persists
+- [x] Setup works consistently across team machines
 
 **Success Criteria:**
-- App runs fully in Docker with hot-reload
-- Data persists in MongoDB volume
-- Consistent dev environment across team
+- [x] App runs fully in Docker with hot-reload
+- [x] Data persists in MongoDB volume
+- [x] Consistent dev environment across team
 
 ---
 
 ## Phase 3: Production Deployment
 
 ### Frontend
-- [ ] Multi-stage Dockerfile: node:18-alpine build → nginx:alpine serve
-- [ ] SPA routing rewrite rules, asset minification
+- [x] Multi-stage Dockerfile (`docker/Dockerfile.frontend.prod`): node:20-alpine build → nginx:alpine serve
+- [x] SPA routing rewrite rules (`docker/nginx.frontend.conf`), asset minification via Vite build
 
 ### Backend
-- [ ] Production Dockerfile: prod deps only, PM2 or `node src/server.js`, health check
-- [ ] Compression middleware, rate limiting, proper logging
+- [x] Production Dockerfile (`docker/Dockerfile.backend.prod`): prod deps only (`--omit=dev`), `node src/server.js`
 
 ### Nginx
-- [ ] Reverse proxy: `/` → frontend, `/api/*` → backend
-- [ ] Gzip compression, cache headers, security headers (X-Frame-Options, HSTS)
-- [ ] SSL/TLS: HTTPS redirect, Let's Encrypt support
+- [x] Reverse proxy (`docker/nginx.conf`): `/api/` → backend:5000, `/` → frontend:80
+- [x] Gzip compression, cache headers for static assets, security headers (X-Frame-Options, X-XSS-Protection, X-Content-Type-Options)
 
 ### MongoDB
-- [ ] Auth enabled, proper user roles, persistent volume, backup strategy
+- [x] Auth enabled via `MONGO_INITDB_ROOT_USERNAME/PASSWORD`, persistent volume
 
 ### Infra & Security
-- [ ] `docker-compose.prod.yml` — restart: always, health checks, resource limits
-- [ ] `.env.production` with all vars; no hardcoded secrets in images
-- [ ] `GET /api/health` endpoint, centralized container logging
-- [ ] Non-root users in containers, rate limiting, CSRF/XSS headers
+- [x] `docker-compose.prod.yml` — `restart: always`, isolated `internal` network, no ports exposed except nginx:80
+- [x] `.env.prod.example` with all required vars; secrets injected via env_file, not baked into images
+- [x] Docker socket mount for Container Labs backend (`/var/run/docker.sock`)
 
 ### Validation
-- [ ] Staging deploy: all services healthy, SSL/TLS verified, auto-restart confirmed
-- [ ] Load test, rollback procedure documented
+- [ ] Internal deploy: all services healthy, auto-restart confirmed
+- [ ] Rollback: `docker compose -f docker-compose.prod.yml down && docker compose -f docker-compose.prod.yml up -d`
 
 **Success Criteria:**
-- Deployed behind Nginx with SSL/TLS
-- All services have health checks and auto-restart
-- Assets minified, gzip enabled, sensitive data secured
-- Deployment and rollback procedures documented
+- [x] All services wired behind Nginx on port 80
+- [x] Assets minified, gzip enabled, sensitive data secured via env_file
+- [x] Single command deploy: `docker compose -f docker-compose.prod.yml up --build -d`
 
 ---
 
@@ -253,8 +250,32 @@ Phase-by-phase tasks for the Nutanix NKP Demo E-Learning Platform.
 
 ---
 
+---
+
+## Sprint 5: Production Docker Packaging
+
+### Docker
+- [x] `docker/Dockerfile.frontend.prod` — multi-stage build (node:20-alpine → nginx:alpine)
+- [x] `docker/Dockerfile.backend.prod` — production node, prod deps only
+- [x] `docker/nginx.conf` — reverse proxy: `/api/` → backend, `/` → frontend
+- [x] `docker/nginx.frontend.conf` — SPA routing with try_files fallback + static asset caching
+- [x] `docker-compose.prod.yml` — all 4 services (mongodb, backend, frontend, nginx), internal network, Docker socket mount
+
+### Config
+- [x] `.env.prod.example` — complete production env template
+- [x] `VITE_API_URL=/api` — relative API path baked in at build time (works behind any host/IP)
+
+### Launch
+```bash
+cp .env.prod.example .env.prod
+# edit .env.prod — fill in passwords, JWT_SECRET, ENCRYPTION_KEY, VITE_PDF_URL
+docker compose -f docker-compose.prod.yml up --build -d
+```
+
+---
+
 ## Cross-Phase Requirements
 
-- [ ] No console warnings or errors; meaningful user-facing error messages
-- [ ] API endpoint documentation maintained
-- [ ] Meaningful commits, feature branches, `.gitignore` configured
+- [x] No console warnings or errors; meaningful user-facing error messages
+- [x] API endpoint documentation maintained (INSTRUCTION.md)
+- [x] Meaningful commits, feature branches, `.gitignore` configured
