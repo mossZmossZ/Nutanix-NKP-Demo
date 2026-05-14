@@ -1,8 +1,8 @@
 const router   = require('express').Router()
 const path     = require('path')
-const { spawn } = require('child_process')
 const crypto   = require('crypto')
 const os       = require('os')
+const tar      = require('tar-fs')
 const { protect, requireRole } = require('../middleware/auth')
 const ContainerSession = require('../models/ContainerSession')
 const User     = require('../models/User')
@@ -52,17 +52,24 @@ router.post('/build-image', ...adminOnly, (req, res) => {
 
   buildState = { status: 'building', log: [] }
 
-  const proc = spawn('docker', ['build', '-t', IMAGE_NAME, '-f', 'Dockerfile.lab', '.'], {
-    cwd: DOCKER_DIR,
+  const tarStream = tar.pack(DOCKER_DIR)
+  docker.buildImage(tarStream, { dockerfile: 'Dockerfile.lab', t: IMAGE_NAME }, (err, stream) => {
+    if (err) {
+      buildState.status = 'error'
+      buildState.log.push(`Build error: ${err.message}`)
+      return
+    }
+    docker.modem.followProgress(stream,
+      (err) => {
+        buildState.status = err ? 'error' : 'built'
+        if (err) buildState.log.push(`Build failed: ${err.message}`)
+      },
+      (event) => {
+        if (event.stream) buildState.log.push(event.stream)
+        if (event.error) buildState.log.push(`Error: ${event.error}`)
+      }
+    )
   })
-
-  proc.on('error', err => {
-    buildState.status = 'error'
-    buildState.log.push(`Failed to start docker: ${err.message}`)
-  })
-  proc.stdout.on('data', d => buildState.log.push(d.toString()))
-  proc.stderr.on('data', d => buildState.log.push(d.toString()))
-  proc.on('close', code => { buildState.status = code === 0 ? 'built' : 'error' })
 
   res.json({ message: 'Build started' })
 })
