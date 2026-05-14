@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight, BookOpen, Server, GraduationCap,
@@ -240,14 +241,101 @@ export default function Home() {
 
 /* ── Sub-components ───────────────────────────────────── */
 
+const TERMINAL_SCRIPT = [
+  { type: 'cmd',    text: '$ nkp version',               postPause: 150 },
+  { type: 'output', text: 'nkp/v2.4.0 linux/amd64',      color: 'text-gray-400',    prePause: 80,  postPause: 450 },
+  { type: 'blank',  pause: 80 },
+  { type: 'cmd',    text: '$ nkp create cluster aws \\', postPause: 80 },
+  { type: 'cmd',    text: '  --cluster-name demo',        postPause: 700 },
+  { type: 'blank',  pause: 80 },
+  { type: 'output', text: '› Bootstrapping cluster...',   color: 'text-yellow-400',  prePause: 100, postPause: 1300 },
+  { type: 'output', text: '› Installing KubeAddons...',   color: 'text-yellow-400',  prePause: 60,  postPause: 900 },
+  { type: 'blank',  pause: 80 },
+  { type: 'output', text: '✓ Cluster is ready!',          color: 'text-emerald-400', prePause: 400 },
+]
+
 function TerminalCard() {
+  const [displayedLines, setDisplayedLines] = useState([])
+  const [currentTyping, setCurrentTyping] = useState('')
+  const [cursorOn, setCursorOn] = useState(true)
+
+  useEffect(() => {
+    let timer
+    let cancelled = false
+    let lines = []
+    let lineIdx = 0
+    let charIdx = 0
+
+    const schedule = (fn, delay) => {
+      timer = setTimeout(() => { if (!cancelled) fn() }, delay)
+    }
+
+    const run = () => {
+      if (lineIdx >= TERMINAL_SCRIPT.length) {
+        schedule(() => {
+          lines = []
+          lineIdx = 0
+          charIdx = 0
+          setDisplayedLines([])
+          setCurrentTyping('')
+          schedule(run, 400)
+        }, 2500)
+        return
+      }
+
+      const line = TERMINAL_SCRIPT[lineIdx]
+
+      if (line.type === 'blank') {
+        lines = [...lines, null]
+        setDisplayedLines([...lines])
+        lineIdx++
+        schedule(run, line.pause ?? 80)
+        return
+      }
+
+      if (line.type === 'output') {
+        schedule(() => {
+          lines = [...lines, { text: line.text, color: line.color }]
+          setDisplayedLines([...lines])
+          lineIdx++
+          schedule(run, line.postPause ?? 150)
+        }, line.prePause ?? 200)
+        return
+      }
+
+      // cmd: typewriter character by character
+      if (charIdx < line.text.length) {
+        charIdx++
+        setCurrentTyping(line.text.slice(0, charIdx))
+        schedule(run, 45)
+      } else {
+        lines = [...lines, { text: line.text, color: 'text-gray-200' }]
+        setDisplayedLines([...lines])
+        setCurrentTyping('')
+        charIdx = 0
+        lineIdx++
+        schedule(run, line.postPause ?? 300)
+      }
+    }
+
+    schedule(run, 600)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [])
+
+  useEffect(() => {
+    const id = setInterval(() => setCursorOn(v => !v), 530)
+    return () => clearInterval(id)
+  }, [])
+
+  const cursor = (
+    <span className={`inline-block w-[7px] h-[14px] bg-nutanix-500 ml-0.5 align-middle ${cursorOn ? 'opacity-100' : 'opacity-0'}`} />
+  )
+
   return (
     <div className="relative">
-      {/* Glow */}
       <div className="absolute -inset-4 bg-nutanix-100 rounded-3xl blur-2xl opacity-60" />
 
       <div className="relative rounded-2xl overflow-hidden border border-gray-200 shadow-2xl">
-        {/* Title bar */}
         <div className="bg-gray-900 px-4 py-3 flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-red-500" />
           <span className="w-3 h-3 rounded-full bg-yellow-500" />
@@ -255,24 +343,26 @@ function TerminalCard() {
           <span className="ml-3 text-xs text-gray-400 font-mono">nkp — bash</span>
         </div>
 
-        {/* Terminal body */}
-        <div className="bg-gray-950 p-6 font-mono text-sm space-y-2 min-h-[280px]">
-          <CodeLine prompt="$" command="nkp version" />
-          <p className="text-gray-400 pl-4">nkp/v2.4.0 linux/amd64</p>
-          <div className="h-2" />
-          <CodeLine prompt="$" command="nkp create cluster aws \\" />
-          <CodeLine indent command="  --cluster-name demo" />
-          <div className="h-2" />
-          <CodeLine prompt="›" output="Bootstrapping cluster..." color="text-yellow-400" />
-          <CodeLine prompt="›" output="Installing KubeAddons..." color="text-yellow-400" />
-          <div className="h-2" />
-          <CodeLine prompt="✓" output="Cluster is ready!" color="text-emerald-400" />
-          <div className="h-2" />
-          <div className="flex items-center gap-1 text-gray-400">
-            <span className="text-nutanix-400">$</span>
-            <span className="ml-2 text-gray-200">_</span>
-            <span className="w-2 h-4 bg-nutanix-500 animate-pulse ml-0.5" />
-          </div>
+        <div className="bg-gray-950 p-6 font-mono text-sm min-h-[280px]">
+          {displayedLines.map((line, i) =>
+            line === null ? (
+              <div key={i} className="h-3" />
+            ) : (
+              <div key={i} className={`leading-6 ${line.color}`}>{line.text}</div>
+            )
+          )}
+
+          {currentTyping !== '' ? (
+            <div className="flex items-center leading-6 text-gray-200">
+              <span>{currentTyping}</span>
+              {cursor}
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 leading-6">
+              <span className="text-nutanix-400">$</span>
+              {cursor}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -274,6 +274,21 @@ docker compose -f docker-compose.prod.yml up --build -d
 
 ---
 
+## Sprint 6: UX/UI Polish — Home Page & Footer
+
+### Home Page
+- [x] Hero `TerminalCard` — replaced static text with looping typewriter animation
+  - Lines type out character by character (45ms/char) with blinking block cursor
+  - Output lines appear with timed pre-delays (simulating real command execution)
+  - Timing: `nkp version` → instant output → `nkp create cluster` typed → bootstrap/install delays → success
+  - Holds on completion for 2.5s then resets and loops
+  - Blinking cursor always visible (530ms interval) — idle `$ _` between lines
+
+### Footer
+- [x] Replaced "All systems operational" with "Powered by Nattavee" credit (Nutanix purple)
+
+---
+
 ## Cross-Phase Requirements
 
 - [x] No console warnings or errors; meaningful user-facing error messages

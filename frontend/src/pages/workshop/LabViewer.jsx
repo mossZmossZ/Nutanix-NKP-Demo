@@ -309,24 +309,26 @@ export default function LabViewer() {
           </div>
         </main>
 
-        {/* ── Sticky bottom navigation (Coursera-style) ── */}
-        <nav className="shrink-0 bg-white border-t border-gray-100 px-4 sm:px-8 py-4">
-          <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
+        {/* ── Sticky bottom navigation ── */}
+        <nav className="shrink-0 bg-white border-t border-gray-100 px-4 sm:px-8 py-3 sm:py-4">
+          <div className="max-w-3xl mx-auto flex items-center gap-2 sm:gap-3">
 
-            {/* Previous */}
+            {/* Previous — icon-only on mobile */}
             <button
               onClick={handlePrev}
               disabled={currentIndex === 0}
-              className="btn-secondary text-sm py-2.5 px-5 disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Previous step"
+              className="btn-secondary text-sm py-2.5 px-3 sm:px-5 disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
             >
-              <ChevronLeft size={16} /> Previous
+              <ChevronLeft size={16} />
+              <span className="hidden sm:inline">Previous</span>
             </button>
 
-            {/* Mark complete */}
+            {/* Mark complete — grows to fill center space on mobile */}
             <button
               onClick={toggleComplete}
               disabled={marking}
-              className={`text-sm py-2.5 px-5 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 min-w-[11rem] ${
+              className={`flex-1 sm:flex-none text-sm py-2.5 px-4 sm:px-5 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 sm:min-w-[11rem] ${
                 isCompleted
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
                   : 'bg-nutanix-700 text-white hover:bg-nutanix-800 shadow-sm'
@@ -340,17 +342,18 @@ export default function LabViewer() {
               }
             </button>
 
-            {/* Next — shows advancing state during countdown */}
+            {/* Next — icon-only on mobile, shows advancing state */}
             <button
               onClick={handleNext}
               disabled={currentIndex === pages.length - 1 && !autoAdvancing}
-              className={`btn-primary text-sm py-2.5 px-5 disabled:opacity-30 disabled:cursor-not-allowed transition-all ${
+              aria-label="Next step"
+              className={`btn-primary text-sm py-2.5 px-3 sm:px-5 disabled:opacity-30 disabled:cursor-not-allowed transition-all shrink-0 ${
                 autoAdvancing ? 'ring-2 ring-nutanix-400 ring-offset-2 animate-pulse-slow' : ''
               }`}
             >
               {autoAdvancing
-                ? <><ChevronRight size={16} className="animate-bounce" /> Advancing…</>
-                : <>Next <ChevronRight size={16} /></>
+                ? <><ChevronRight size={16} className="animate-bounce" /><span className="hidden sm:inline"> Advancing…</span></>
+                : <><span className="hidden sm:inline">Next </span><ChevronRight size={16} /></>
               }
             </button>
 
