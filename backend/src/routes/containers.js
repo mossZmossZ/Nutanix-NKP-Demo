@@ -17,6 +17,7 @@ const DOCKER_DIR = path.resolve(__dirname, '../../../docker')
 let buildState = { status: 'idle', log: [] }
 
 const getHostIP = () => {
+  if (process.env.HOST_IP) return process.env.HOST_IP
   const ifaces = os.networkInterfaces()
   for (const iface of Object.values(ifaces)) {
     for (const alias of iface) {
