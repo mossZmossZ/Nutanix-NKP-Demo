@@ -52,6 +52,7 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL:-/api}
         VITE_PDF_URL: ${VITE_PDF_URL:-}
+        VITE_APP_NAME: ${VITE_APP_NAME:-Nutanix NKP Demo}
     container_name: nkp-frontend
     restart: always
     networks:

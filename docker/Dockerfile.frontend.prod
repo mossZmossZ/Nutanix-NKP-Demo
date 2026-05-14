@@ -6,8 +6,10 @@ RUN npm ci
 COPY frontend/ .
 ARG VITE_API_URL=/api
 ARG VITE_PDF_URL
+ARG VITE_APP_NAME=Nutanix NKP Demo
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_PDF_URL=$VITE_PDF_URL
+ENV VITE_APP_NAME=$VITE_APP_NAME
 RUN npm run build
 
 # Stage 2: Serve with nginx

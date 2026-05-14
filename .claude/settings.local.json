@@ -5,7 +5,8 @@
       "Bash(mkdir -p /mnt/c/Users/Nattavee/Desktop/GITHUB/Nutanix-NKP-Demo/frontend/public)",
       "Bash(cp /mnt/c/Users/Nattavee/Desktop/GITHUB/Nutanix-NKP-Demo/assets/NKP-Setup-Guide.pdf /mnt/c/Users/Nattavee/Desktop/GITHUB/Nutanix-NKP-Demo/frontend/public/NKP-Setup-Guide.pdf)",
       "Bash(node *)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Skill(engineering-skills:senior-devops)"
     ]
   },
   "enabledPlugins": {
