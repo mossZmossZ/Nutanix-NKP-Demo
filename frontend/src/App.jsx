@@ -11,6 +11,7 @@ import DemoLogin from '@/pages/demo/DemoLogin'
 import DemoDashboard from '@/pages/demo/DemoDashboard'
 import WorkshopLogin from '@/pages/workshop/WorkshopLogin'
 import WorkshopDashboard from '@/pages/workshop/WorkshopDashboard'
+import LabViewer from '@/pages/workshop/LabViewer'
 import AdminLogin from '@/pages/admin/AdminLogin'
 import AdminDashboard from '@/pages/admin/AdminDashboard'
 import NotFound from '@/pages/NotFound'
@@ -39,6 +40,12 @@ export default function App() {
 
           {/* ── Full-page PDF viewer (no Navbar/Footer) ── */}
           <Route path="/installation/pdf" element={<PdfFullView />} />
+
+          {/* ── Lab Viewer (full-screen, no Navbar/Footer) ── */}
+          <Route
+            path="/workshop/:workshopId/lab"
+            element={<ProtectedRoute portal="workshop"><LabViewer /></ProtectedRoute>}
+          />
 
           {/* ── Admin (no Navbar/Footer) ── */}
           <Route path="/admin" element={<AdminLogin />} />

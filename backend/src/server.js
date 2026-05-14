@@ -34,11 +34,13 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Routes
-app.use('/api/auth',        require('./routes/auth'))
-app.use('/api/users',       require('./routes/users'))
-app.use('/api/content',     require('./routes/content'))
-app.use('/api/admin',       require('./routes/admin'))
-app.use('/api/credentials', require('./routes/credentials'))
+app.use('/api/auth',              require('./routes/auth'))
+app.use('/api/users',             require('./routes/users'))
+app.use('/api/content',           require('./routes/content'))
+app.use('/api/admin/containers',  require('./routes/containers'))
+app.use('/api/admin',             require('./routes/admin'))
+app.use('/api/credentials',       require('./routes/credentials'))
+app.use('/api/workshop',          require('./routes/workshop'))
 
 // Health check
 app.get('/api/health', (req, res) => {

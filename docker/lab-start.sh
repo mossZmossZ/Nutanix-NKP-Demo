@@ -1,0 +1,43 @@
+#!/bin/bash
+set -e
+
+# Create user with provided password
+useradd -m -s /bin/bash user
+echo "user:${USER_PASSWORD}" | chpasswd
+usermod -aG sudo,docker user
+echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Configure SSH — enable password auth
+sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/'   /etc/ssh/sshd_config
+ssh-keygen -A
+service ssh start
+
+# Enable IP forwarding so DinD containers can route packets out
+sysctl -w net.ipv4.ip_forward=1 || true
+
+# Accept all forwarded packets — required for DinD port bindings to work
+iptables -P FORWARD ACCEPT || true
+
+# Start Docker daemon:
+#   --storage-driver vfs   : overlay2 fails in nested containers (no nested overlay)
+#   --userland-proxy=false : use pure iptables DNAT instead of docker-proxy process
+#                            required for host → container → DinD container port chain to work
+dockerd --storage-driver vfs --userland-proxy=false &>/var/log/dockerd.log &
+for i in $(seq 1 30); do docker info &>/dev/null && break || sleep 1; done
+
+# Write code-server config with password (avoids shell-escaping issues)
+mkdir -p /home/user/.config/code-server
+cat > /home/user/.config/code-server/config.yaml <<EOF
+bind-addr: 0.0.0.0:8080
+auth: password
+password: ${USER_PASSWORD}
+cert: false
+EOF
+chown -R user:user /home/user/.config
+
+# Start code-server as the lab user
+su - user -c "code-server" &
+
+# Keep container running
+tail -f /dev/null

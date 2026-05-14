@@ -2,18 +2,24 @@ import { useState } from 'react'
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Users, KeyRound, LogOut,
-  Menu, X, ChevronRight,
+  Menu, X, ChevronRight, GraduationCap, BadgeCheck, Box,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { confirm } from '@/lib/swal'
-import Overview    from './Overview'
-import UsersPage   from './Users'
-import Credentials from './Credentials'
+import Overview          from './Overview'
+import UsersPage         from './Users'
+import Credentials       from './Credentials'
+import WorkshopsPage     from './Workshops'
+import WorkshopCreds     from './WorkshopCredentials'
+import ContainerLabs     from './ContainerLabs'
 
 const navItems = [
-  { label: 'Overview',    to: '/admin/dashboard',             icon: LayoutDashboard },
-  { label: 'Users',       to: '/admin/dashboard/users',       icon: Users },
-  { label: 'Credentials', to: '/admin/dashboard/credentials', icon: KeyRound },
+  { label: 'Overview',         to: '/admin/dashboard',                       icon: LayoutDashboard },
+  { label: 'Users',            to: '/admin/dashboard/users',                 icon: Users },
+  { label: 'Demo Credentials', to: '/admin/dashboard/credentials',           icon: KeyRound },
+  { label: 'Workshops',        to: '/admin/dashboard/workshops',             icon: GraduationCap },
+  { label: 'Workshop Creds',   to: '/admin/dashboard/workshop-credentials',  icon: BadgeCheck },
+  { label: 'Container Labs',   to: '/admin/dashboard/container-labs',        icon: Box },
 ]
 
 export default function AdminDashboard() {
@@ -27,7 +33,7 @@ export default function AdminDashboard() {
     if (result.isConfirmed) { logout(); navigate('/admin') }
   }
 
-  const currentPage = navItems.find(n => n.to === location.pathname)?.label || 'Admin'
+  const currentPage = navItems.find(n => location.pathname === n.to || (n.to !== '/admin/dashboard' && location.pathname.startsWith(n.to)))?.label || 'Admin'
 
   return (
     // h-dvh handles mobile browser chrome (address bar shrinks/expands)
@@ -156,6 +162,9 @@ export default function AdminDashboard() {
             <Route index element={<Overview />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="credentials" element={<Credentials />} />
+            <Route path="workshops" element={<WorkshopsPage />} />
+            <Route path="workshop-credentials" element={<WorkshopCreds />} />
+            <Route path="container-labs" element={<ContainerLabs />} />
           </Routes>
         </main>
       </div>

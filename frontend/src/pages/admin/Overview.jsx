@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Users, Monitor, GraduationCap, KeyRound, ArrowRight } from 'lucide-react'
+import { Users, Monitor, GraduationCap, KeyRound, ArrowRight, BookOpen, BadgeCheck, Box } from 'lucide-react'
 import api from '@/lib/api'
 
 export default function Overview() {
-  const [stats, setStats]   = useState(null)
+  const [stats, setStats]     = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -18,7 +18,9 @@ export default function Overview() {
     { icon: Users,         label: 'Total Users',         value: stats.totalUsers,       color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-100' },
     { icon: Monitor,       label: 'Demo Portal Users',   value: stats.demoUsers,        color: 'text-nutanix-700', bg: 'bg-nutanix-50', border: 'border-nutanix-100' },
     { icon: GraduationCap, label: 'Workshop Users',      value: stats.workshopUsers,    color: 'text-indigo-600',  bg: 'bg-indigo-50',  border: 'border-indigo-100' },
-    { icon: KeyRound,      label: 'Cluster Credentials', value: stats.totalCredentials, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+    { icon: KeyRound,      label: 'Demo Credentials',    value: stats.totalCredentials, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+    { icon: BookOpen,      label: 'Active Workshops',    value: stats.totalWorkshops,   color: 'text-violet-600',  bg: 'bg-violet-50',  border: 'border-violet-100' },
+    { icon: BadgeCheck,    label: 'Published Lab Steps', value: stats.totalPages,       color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-100' },
   ] : []
 
   return (
@@ -28,10 +30,10 @@ export default function Overview() {
         <p className="text-sm text-gray-500 mt-0.5">Platform summary at a glance.</p>
       </div>
 
-      {/* Stats grid — 2 cols on mobile, 4 on lg */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      {/* Stats grid — 2 cols on mobile, 3 on md, 6 on xl */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
         {loading
-          ? Array.from({ length: 4 }).map((_, i) => (
+          ? Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 animate-pulse">
                 <div className="w-8 h-8 bg-gray-100 rounded-lg mb-3" />
                 <div className="h-6 bg-gray-100 rounded w-10 mb-1" />
@@ -63,9 +65,27 @@ export default function Overview() {
         />
         <QuickAction
           icon={<KeyRound size={15} className="text-emerald-600" />}
-          label="Manage Credentials"
+          label="Demo Credentials"
           desc="Add cluster credentials and kubeconfig files for the Demo Portal."
           to="/admin/dashboard/credentials"
+        />
+        <QuickAction
+          icon={<BookOpen size={15} className="text-violet-600" />}
+          label="Manage Workshops"
+          desc="Create workshops, write lab steps, and manage credential fields."
+          to="/admin/dashboard/workshops"
+        />
+        <QuickAction
+          icon={<BadgeCheck size={15} className="text-amber-600" />}
+          label="Workshop Credentials"
+          desc="Assign per-user lab credentials (VSCode, registry, etc.)."
+          to="/admin/dashboard/workshop-credentials"
+        />
+        <QuickAction
+          icon={<Box size={15} className="text-sky-600" />}
+          label="Container Labs"
+          desc="Provision isolated lab containers with code-server, Docker, and kubectl."
+          to="/admin/dashboard/container-labs"
         />
       </div>
     </div>

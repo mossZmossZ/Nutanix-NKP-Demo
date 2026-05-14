@@ -18,13 +18,15 @@ const validate = (req, res) => {
 
 router.get('/stats', ...adminOnly, async (req, res, next) => {
   try {
-    const [totalUsers, demoUsers, workshopUsers, totalCredentials] = await Promise.all([
+    const [totalUsers, demoUsers, workshopUsers, totalCredentials, totalWorkshops, totalPages] = await Promise.all([
       User.countDocuments({ role: { $ne: 'admin' } }),
       User.countDocuments({ portalAccess: 'demo' }),
       User.countDocuments({ portalAccess: 'workshop' }),
       Credential.countDocuments({ active: true }),
+      require('../models/Workshop').countDocuments({ active: true }),
+      require('../models/WorkshopPage').countDocuments({ published: true }),
     ])
-    res.json({ totalUsers, demoUsers, workshopUsers, totalCredentials })
+    res.json({ totalUsers, demoUsers, workshopUsers, totalCredentials, totalWorkshops, totalPages })
   } catch (err) { next(err) }
 })
 
@@ -86,8 +88,23 @@ router.delete('/users/:id', ...adminOnly, async (req, res, next) => {
     if (req.params.id === req.user._id.toString()) {
       return res.status(400).json({ message: 'Cannot delete your own account' })
     }
-    const user = await User.findByIdAndDelete(req.params.id)
+    const user = await User.findById(req.params.id)
     if (!user) return res.status(404).json({ message: 'User not found' })
+
+    // Remove lab container if one exists
+    const ContainerSession = require('../models/ContainerSession')
+    const docker = require('../lib/docker')
+    const session = await ContainerSession.findOne({ userId: req.params.id })
+    if (session?.containerId) {
+      try {
+        await docker.getContainer(session.containerId).remove({ force: true })
+      } catch (e) {
+        if (e.statusCode !== 404) console.error('Container cleanup error:', e.message)
+      }
+    }
+    if (session) await session.deleteOne()
+
+    await user.deleteOne()
     res.json({ message: 'User deleted' })
   } catch (err) { next(err) }
 })
@@ -161,6 +178,154 @@ router.get('/credentials/:id/kubeconfig', protect, async (req, res, next) => {
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
     res.setHeader('Content-Type', 'application/x-yaml')
     res.send(cred.kubeconfigYaml)
+  } catch (err) { next(err) }
+})
+
+// ─── Workshops ────────────────────────────────────────────────────────────────
+const Workshop     = require('../models/Workshop')
+const WorkshopPage = require('../models/WorkshopPage')
+const WorkshopCred = require('../models/WorkshopCredential')
+
+router.get('/workshops', ...adminOnly, async (req, res, next) => {
+  try {
+    const workshops = await Workshop.find().populate('assignedUsers', 'username').sort('-createdAt')
+    res.json(workshops)
+  } catch (err) { next(err) }
+})
+
+router.post('/workshops', ...adminOnly,
+  [body('title').trim().notEmpty().withMessage('Title is required')],
+  async (req, res, next) => {
+    if (!validate(req, res)) return
+    try {
+      const { title, description, credentialFields, assignedUsers } = req.body
+      const w = await Workshop.create({
+        title, description,
+        credentialFields: credentialFields || [],
+        assignedUsers: assignedUsers || [],
+      })
+      res.status(201).json(w)
+    } catch (err) { next(err) }
+  }
+)
+
+router.put('/workshops/:id', ...adminOnly, async (req, res, next) => {
+  try {
+    const w = await Workshop.findById(req.params.id)
+    if (!w) return res.status(404).json({ message: 'Workshop not found' })
+    const { title, description, credentialFields, assignedUsers, active } = req.body
+    if (title !== undefined)            w.title            = title
+    if (description !== undefined)      w.description      = description
+    if (credentialFields !== undefined) w.credentialFields = credentialFields
+    if (assignedUsers !== undefined)    w.assignedUsers    = assignedUsers
+    if (active !== undefined)           w.active           = active
+    await w.save()
+    res.json(w)
+  } catch (err) { next(err) }
+})
+
+router.delete('/workshops/:id', ...adminOnly, async (req, res, next) => {
+  try {
+    await Workshop.findByIdAndDelete(req.params.id)
+    await WorkshopPage.deleteMany({ workshopId: req.params.id })
+    res.json({ message: 'Workshop deleted' })
+  } catch (err) { next(err) }
+})
+
+// Workshop pages
+router.get('/workshops/:id/pages', ...adminOnly, async (req, res, next) => {
+  try {
+    const pages = await WorkshopPage.find({ workshopId: req.params.id }).sort('order')
+    res.json(pages)
+  } catch (err) { next(err) }
+})
+
+router.post('/workshops/:id/pages', ...adminOnly,
+  [body('title').trim().notEmpty().withMessage('Page title is required')],
+  async (req, res, next) => {
+    if (!validate(req, res)) return
+    try {
+      const { title, content, published } = req.body
+      const count = await WorkshopPage.countDocuments({ workshopId: req.params.id })
+      const page = await WorkshopPage.create({
+        workshopId: req.params.id,
+        title,
+        content: content || '',
+        order: count,
+        published: published !== false,
+      })
+      res.status(201).json(page)
+    } catch (err) { next(err) }
+  }
+)
+
+router.put('/workshops/:id/pages/:pageId', ...adminOnly, async (req, res, next) => {
+  try {
+    const page = await WorkshopPage.findOne({ _id: req.params.pageId, workshopId: req.params.id })
+    if (!page) return res.status(404).json({ message: 'Page not found' })
+    const { title, content, order, published } = req.body
+    if (title !== undefined)     page.title     = title
+    if (content !== undefined)   page.content   = content
+    if (order !== undefined)     page.order     = order
+    if (published !== undefined) page.published = published
+    await page.save()
+    res.json(page)
+  } catch (err) { next(err) }
+})
+
+router.delete('/workshops/:id/pages/:pageId', ...adminOnly, async (req, res, next) => {
+  try {
+    await WorkshopPage.findOneAndDelete({ _id: req.params.pageId, workshopId: req.params.id })
+    res.json({ message: 'Page deleted' })
+  } catch (err) { next(err) }
+})
+
+// Workshop credentials (per-user)
+router.get('/workshop-credentials', ...adminOnly, async (req, res, next) => {
+  try {
+    const creds = await WorkshopCred.find()
+      .populate('workshopId', 'title credentialFields')
+      .populate('userId', 'username')
+      .sort('-createdAt')
+    res.json(creds)
+  } catch (err) { next(err) }
+})
+
+router.post('/workshop-credentials', ...adminOnly,
+  [body('workshopId').notEmpty().withMessage('Workshop is required')],
+  async (req, res, next) => {
+    if (!validate(req, res)) return
+    try {
+      const { workshopId, userId, isGlobal, fields } = req.body
+      if (!isGlobal && !userId) {
+        return res.status(400).json({ message: 'User is required' })
+      }
+      const query  = isGlobal ? { workshopId, isGlobal: true } : { workshopId, userId }
+      const update = isGlobal
+        ? { $set: { fields: fields || [], isGlobal: true, userId: null } }
+        : { $set: { fields: fields || [], isGlobal: false } }
+      const cred = await WorkshopCred.findOneAndUpdate(query, update, { upsert: true, new: true })
+        .populate('workshopId', 'title credentialFields')
+        .populate('userId', 'username')
+      res.status(201).json(cred)
+    } catch (err) { next(err) }
+  }
+)
+
+router.put('/workshop-credentials/:id', ...adminOnly, async (req, res, next) => {
+  try {
+    const cred = await WorkshopCred.findById(req.params.id)
+    if (!cred) return res.status(404).json({ message: 'Not found' })
+    if (req.body.fields !== undefined) cred.fields = req.body.fields
+    await cred.save()
+    res.json(cred)
+  } catch (err) { next(err) }
+})
+
+router.delete('/workshop-credentials/:id', ...adminOnly, async (req, res, next) => {
+  try {
+    await WorkshopCred.findByIdAndDelete(req.params.id)
+    res.json({ message: 'Deleted' })
   } catch (err) { next(err) }
 })
 

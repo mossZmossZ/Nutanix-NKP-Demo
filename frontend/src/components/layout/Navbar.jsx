@@ -4,19 +4,19 @@ import { Menu, X, LogOut } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 
 export default function Navbar() {
-  const [menuOpen, setMenuOpen]   = useState(false)
-  const [scrolled, setScrolled]   = useState(false)
-  const menuRef                   = useRef(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const menuRef = useRef(null)
   const { user, logout, hasPortalAccess } = useAuth()
-  const navigate  = useNavigate()
-  const location  = useLocation()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   // Smart portal links — go straight to dashboard when already authenticated
   const navItems = [
-    { label: 'Home',         to: '/' },
+    { label: 'Home', to: '/' },
     { label: 'Installation', to: '/installation' },
-    { label: 'Demo Portal',  to: hasPortalAccess('demo')     ? '/demo/dashboard'     : '/demo' },
-    { label: 'Workshop',     to: hasPortalAccess('workshop') ? '/workshop/dashboard' : '/workshop' },
+    { label: 'Demo Portal', to: hasPortalAccess('demo') ? '/demo/dashboard' : '/demo' },
+    { label: 'Workshop', to: hasPortalAccess('workshop') ? '/workshop/dashboard' : '/workshop' },
   ]
 
   // Scroll shadow
@@ -62,8 +62,8 @@ export default function Navbar() {
             <span className="text-white font-bold text-xs md:text-sm tracking-tight">N</span>
           </div>
           <div className="leading-none hidden sm:block">
-            <span className="font-bold text-gray-900 text-sm tracking-tight">Nutanix</span>
-            <span className="text-nutanix-700 font-bold text-sm tracking-tight"> NKP</span>
+            <span className="font-bold text-gray-900 text-sm tracking-tight">NKP </span>
+            <span className="text-nutanix-700 font-bold text-sm tracking-tight">DEMO</span>
           </div>
         </Link>
 
