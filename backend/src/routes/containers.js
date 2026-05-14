@@ -168,7 +168,7 @@ router.post('/:userId/provision', ...adminOnly, async (req, res, next) => {
       const container = await docker.createContainer({
         name:  containerName,
         Image: IMAGE_NAME,
-        Env:   [`USER_PASSWORD=${password}`],
+        Env:   [`USER_PASSWORD=${password}`, `LAB_SLOT=${slot}`],
         ExposedPorts: {
           '22/tcp': {},
           '8080/tcp': {},

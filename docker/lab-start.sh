@@ -45,8 +45,8 @@ cert: false
 EOF
 chown -R user:user /home/user/.config
 
-# Start code-server as the lab user
-su - user -c "code-server" &
+# Start code-server as the lab user (base-path matches nginx proxy path)
+su - user -c "code-server --base-path /lab/slot${LAB_SLOT}/" &
 
 # Keep container running
 tail -f /dev/null
