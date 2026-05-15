@@ -188,6 +188,19 @@ router.post('/:userId/provision', ...adminOnly, async (req, res, next) => {
       await container.start()
       session.status = 'running'
       await session.save()
+
+      // Attach to the stack's internal network so nginx can proxy directly by alias
+      const internalNet = process.env.INTERNAL_NETWORK_NAME
+      if (internalNet) {
+        try {
+          await docker.getNetwork(internalNet).connect({
+            Container: container.id,
+            EndpointConfig: { Aliases: [`lab-cs-${slot}`] },
+          })
+        } catch (e) {
+          console.warn(`lab-cs-${slot}: could not attach to ${internalNet}: ${e.message}`)
+        }
+      }
     } catch (dockerErr) {
       session.status = 'error'
       await session.save()

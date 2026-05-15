@@ -31,8 +31,8 @@ RUN curl -fsSL https://get.helm.sh/helm-v3.13.3-linux-amd64.tar.gz \
     && mv /tmp/linux-amd64/helm /usr/local/bin/helm \
     && rm -rf /tmp/linux-amd64
 
-# code-server v4.16.1 — pinned: latest versions removed --base-path support
-RUN curl -fsSL https://code-server.dev/install.sh | sh -s -- --version 4.16.1
+# code-server v4.22.1 — base-path support was re-added in v4.22.0
+RUN curl -fsSL https://code-server.dev/install.sh | sh -s -- --version 4.22.1
 
 RUN mkdir -p /var/run/sshd
 
