@@ -430,24 +430,29 @@ export default function ContainerLabs() {
                         <CopyBtn value={`ssh user@${hostIP} -p ${session.sshPort}`} />
                       </div>
 
-                      {/* VS Code (code-server) */}
-                      <div className="flex items-center gap-3 px-3 py-2.5">
-                        <div className="flex items-center gap-1.5 w-24 shrink-0">
-                          <Code2 size={11} className="text-nutanix-600 shrink-0" />
-                          <span className="font-semibold text-nutanix-700">VS Code</span>
-                          <span className="font-mono text-gray-400 ml-auto">:{session.codeServerPort}</span>
-                        </div>
-                        <a
-                          href={`http://${hostIP}:${session.codeServerPort}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-mono text-nutanix-600 hover:underline flex-1 min-w-0 truncate"
-                        >
-                          http://{hostIP}:{session.codeServerPort}
-                        </a>
-                        <ExternalLink size={11} className="text-gray-300 shrink-0" />
-                        <CopyBtn value={`http://${hostIP}:${session.codeServerPort}`} />
-                      </div>
+                      {/* VS Code (code-server) — via nginx proxy on port 8080 */}
+                      {(() => {
+                        const vsUrl = `http://${hostIP}:8080/lab/slot${session.slot}/`
+                        return (
+                          <div className="flex items-center gap-3 px-3 py-2.5">
+                            <div className="flex items-center gap-1.5 w-24 shrink-0">
+                              <Code2 size={11} className="text-nutanix-600 shrink-0" />
+                              <span className="font-semibold text-nutanix-700">VS Code</span>
+                              <span className="font-mono text-gray-400 ml-auto">slot{session.slot}</span>
+                            </div>
+                            <a
+                              href={vsUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-mono text-nutanix-600 hover:underline flex-1 min-w-0 truncate"
+                            >
+                              {vsUrl}
+                            </a>
+                            <ExternalLink size={11} className="text-gray-300 shrink-0" />
+                            <CopyBtn value={vsUrl} />
+                          </div>
+                        )
+                      })()}
 
                       {/* App Port — always shown; computed from slot when not yet mapped */}
                       {(() => {
