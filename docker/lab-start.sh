@@ -90,6 +90,7 @@ bind-addr: 0.0.0.0:8080
 auth: password
 password: ${USER_PASSWORD}
 cert: false
+base-path: /lab/${LAB_SLOT}
 EOF
 chown -R user:user /home/user/.config
 
