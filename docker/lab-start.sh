@@ -75,10 +75,11 @@ echo
 
 diag "Run test container with port binding:"
 docker rm -f diag-test 2>/dev/null || true
-docker run -d --name diag-test -p 9999:80 nginx:alpine 2>/dev/null
+docker run -d --name diag-test -p 9999:80 nginx:alpine 2>/dev/null || true
 sleep 2
 check "curl inner:9999"      curl -fsI --connect-timeout 2 http://localhost:9999
-check "curl <inner-ip>:80"   DIP=$(docker inspect -f '{{.NetworkSettings.IPAddress}}' diag-test 2>/dev/null); curl -fsI --connect-timeout 2 "http://${DIP:-127.0.0.1}:80"
+DIP=$(docker inspect -f '{{.NetworkSettings.IPAddress}}' diag-test 2>/dev/null || echo '')
+check "curl <inner-ip>:80"   curl -fsI --connect-timeout 2 "http://${DIP:-127.0.0.1}:80"
 docker rm -f diag-test 2>/dev/null || true
 echo
 
@@ -99,7 +100,7 @@ sleep 3  # wait for code-server to finish starting up
 
 # ─── Service liveness checks ───────────────────────────────────────────────────
 diag "Service liveness:"
-check "SSH on port 22"       curl -fsI --connect-timeout 2 telnet://localhost:22 2>/dev/null || nc -z localhost 22
+check "SSH on port 22"       nc -z localhost 22
 check "code-server on :8080" curl -fsI --connect-timeout 3 http://localhost:8080/login
 check "sshd process"         pgrep -f sshd
 echo
