@@ -430,9 +430,9 @@ export default function ContainerLabs() {
                         <CopyBtn value={`ssh user@${hostIP} -p ${session.sshPort}`} />
                       </div>
 
-                      {/* VS Code (code-server) — via nginx proxy on port 8080 */}
+                      {/* VS Code (code-server) — direct host port */}
                       {(() => {
-                        const vsUrl = `http://${hostIP}:8080/lab/slot${session.slot}/`
+                        const vsUrl = `http://${hostIP}:${session.codeServerPort}`
                         return (
                           <div className="flex items-center gap-3 px-3 py-2.5">
                             <div className="flex items-center gap-1.5 w-24 shrink-0">

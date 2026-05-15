@@ -35,14 +35,13 @@ iptables -P FORWARD ACCEPT || true
 dockerd --storage-driver vfs --userland-proxy=false &>/var/log/dockerd.log &
 for i in $(seq 1 30); do docker info &>/dev/null && break || sleep 1; done
 
-# Write code-server config — base-path set here, not as CLI flag (CLI flag unsupported)
+# Write code-server config
 mkdir -p /home/user/.config/code-server
 cat > /home/user/.config/code-server/config.yaml <<EOF
 bind-addr: 0.0.0.0:8080
 auth: password
 password: ${USER_PASSWORD}
 cert: false
-base-path: /lab/slot${LAB_SLOT}/
 EOF
 chown -R user:user /home/user/.config
 
